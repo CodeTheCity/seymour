@@ -1,0 +1,23 @@
+{
+  "name": "seymour",
+  "version": "1.0.0",
+  "description": "Slack bot for helping you choose and look after house plants",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeTheCity/seymour.git"
+  },
+  "author": "Andrew Sage",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CodeTheCity/seymour/issues"
+  },
+  "homepage": "https://github.com/CodeTheCity/seymour#readme",
+  "dependencies": {
+    "@slack/client": "^3.8.1",
+    "redis": "^2.6.5"
+  }
+}
