@@ -76,6 +76,7 @@ bot.respondTo('plants', (message, channel, user) => {
       break;
 
     case 'remove':
+      removePlant(user.name, args[1], channel);
       break;
 
     case 'killed':
@@ -116,6 +117,31 @@ function addPlant(name, plant, channel) {
   client.sadd(name, plant);
   bot.send('You\'ve added a plant. Make sure you look after it. Did you know I can help you with that?', channel);
   showPlants(name, channel);
+}
+
+function removePlant(name, target, channel) {
+  let plantNum = parseInt(target, 10);
+
+  if (Number.isNaN(plantNum)) {
+    bot.send('Usage: \`plant delete [PLANT_NUMBER]\`');
+    return;
+  }
+
+  client.smembers(name, (err, set) => {
+    if (err || set.length < 1) {
+      bot.send(`You don\'t have any plants to remove, ${name}!`);
+      return;
+    }
+
+    if (plantNum > set.length || plantNum <= 0) {
+      bot.send('Oops, that plant doesn\'t exist!');
+      return;
+    }
+
+    client.srem(name, set[plantNum - 1]);
+    bot.send('You removed a plant. I hope it has gone to a good home.', client);
+    showPlants(name, channel);
+  });
 }
 
 function getArgs(msg) {
