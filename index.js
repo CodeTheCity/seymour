@@ -94,7 +94,7 @@ bot.respondTo('plants', (message, channel, user) => {
 function showPlants(name, channel) {
   client.smembers(name, (err, set) => {
     if (err || set.length < 1) {
-      bot.send(`You don\'t have any plants yet, ${name}! Why not add one with \`plants add [PLANT]\?`, channel);
+      bot.send(`You don\'t have any plants yet, ${name}! Why not add one with \`plants add [PLANT]\`?`, channel);
       return;
     }
 
