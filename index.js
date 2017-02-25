@@ -173,7 +173,7 @@ function showKilledPlants(name, channel) {
     bot.send(`${name}'s plant memorial list:`, channel);
 
     set.forEach((plant, index) => {
-      bot.send(`${index + 1}.${plant}`, channel);
+      bot.send(`${index + 1}. ${plant}`, channel);
     });
   });
 }
@@ -200,6 +200,9 @@ function killedPlant(name, target, channel) {
     client.srem(name, set[plantNum - 1]);
     bot.send('You killed a plant. :scream: That\'s such a shame! It was my favourite.', channel);
     showPlants(name, channel);
+
+    client.sadd(`${name}:killed`, set[plantNum - 1]);
+    showKilledPlants(name, channel);
   });
 }
 
