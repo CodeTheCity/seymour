@@ -76,7 +76,7 @@ bot.respondTo('suggest', (message, channel, user) => {
       break;
 
     default:
-      bot.send(`That\'s not really my speciality ${user.name}, Plants are more my bag you could say!`, channel);
+      bot.send(`That\'s not really my speciality ${user.name}. Plants are more my bag you could say!`, channel);
       break;
   }
 }, true);
