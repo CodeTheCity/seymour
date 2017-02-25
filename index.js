@@ -67,6 +67,45 @@ bot.respondTo('recall', (message, channel, user) => {
   });
 });
 
+bot.respondTo('plants', (message, channel, user) => {
+  let args = getArgs(message.text)
+
+  switch(args[0]) {
+    case 'add':
+      break;
+
+    case 'remove':
+      break;
+
+    case 'killed':
+      break;
+
+    case 'help':
+      bot.send('Add plants with \`plants add [PLANT]\`, remove them with \`plants remove [PLANT_NUMBER]\` and if you\'ve killed it then \`plants killed [PLANT_NUMBER]\`', channel);
+      break;
+
+    default:
+      showPlants(user.name, channel);
+      break;
+  }
+
+}, true);
+
+function showPlants(name, channel) {
+  client.smembers(name, (err, set) => {
+    if (err || set.length < 1) {
+      bot.send(`You don\'t have any plants yet, ${name}! Why not add one with \`plants add [PLANT]\?`, channel);
+      return;
+    }
+
+    bot.send(`${name}'s plant list:`, channel);
+
+    set.forEach((plant, index) => {
+      channel.send(`${index + 1}.${task}`);
+    });
+  });
+}
+
 
 function getArgs(msg) {
   return msg.split(' ').slice(1);
