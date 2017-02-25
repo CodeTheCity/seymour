@@ -72,6 +72,7 @@ bot.respondTo('plants', (message, channel, user) => {
 
   switch(args[0]) {
     case 'add':
+      addPlant(user.name, args.slice(1).join(' '), channel);
       break;
 
     case 'remove':
@@ -101,11 +102,21 @@ function showPlants(name, channel) {
     bot.send(`${name}'s plant list:`, channel);
 
     set.forEach((plant, index) => {
-      channel.send(`${index + 1}.${task}`);
+      bot.send(`${index + 1}.${plant}`, channel);
     });
   });
 }
 
+function addPlant(name, plant, channel) {
+  if(plant === '') {
+    bot.send('Usage: \`plant add [PLANT]\`');
+    return;
+  }
+
+  client.sadd(name, plant);
+  bot.send('You\'ve added a plant. Make sure you look after it. Did you know I can help you with that?', channel);
+  showPlants(name, channel);
+}
 
 function getArgs(msg) {
   return msg.split(' ').slice(1);
