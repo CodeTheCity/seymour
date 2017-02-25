@@ -67,6 +67,20 @@ bot.respondTo('recall', (message, channel, user) => {
   });
 });
 
+bot.respondTo('suggest', (message, channel, user) => {
+  let args = getArgs(message.text)
+
+  switch(args[0]) {
+    case 'plant':
+      bot.send('Let me think about that and I\'ll get back to you.', channel);
+      break;
+
+    default:
+      bot.send(`That\'s not really my speciality ${user.name}, Plants are more my bag you could say!`, channel);
+      break;
+  }
+}, true);
+
 bot.respondTo('plants', (message, channel, user) => {
   let args = getArgs(message.text)
 
@@ -80,10 +94,11 @@ bot.respondTo('plants', (message, channel, user) => {
       break;
 
     case 'killed':
+      showKilledPlants(user.name, channel);
       break;
 
     case 'help':
-      bot.send('Add plants with \`plants add [PLANT]\`, remove them with \`plants remove [PLANT_NUMBER]\` and if you\'ve killed it then \`plants killed [PLANT_NUMBER]\`', channel);
+      bot.send('Add plants with \`plants add [PLANT]\`, remove them with \`plants remove [PLANT_NUMBER]\` and if you\'ve killed it then \`plants killed [PLANT_NUMBER]\`. For a list of plants you\'ve killed \`plants killed\`', channel);
       break;
 
     default:
@@ -141,6 +156,21 @@ function removePlant(name, target, channel) {
     client.srem(name, set[plantNum - 1]);
     bot.send('You removed a plant. I hope it has gone to a good home.', client);
     showPlants(name, channel);
+  });
+}
+
+function showKilledPlants(name, channel) {
+  client.smembers(`${name}:killed`, (err, set) => {
+    if (err || set.length < 1) {
+      bot.send(`You haven\'t killed any plants yet, ${name}! Keep up the good work`, channel);
+      return;
+    }
+
+    bot.send(`${name}'s plant memorial list:`, channel);
+
+    set.forEach((plant, index) => {
+      bot.send(`${index + 1}.${plant}`, channel);
+    });
   });
 }
 
