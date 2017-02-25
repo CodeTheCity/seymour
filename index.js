@@ -94,7 +94,11 @@ bot.respondTo('plants', (message, channel, user) => {
       break;
 
     case 'killed':
-      showKilledPlants(user.name, channel);
+      if (args.length == 1) {
+        showKilledPlants(user.name, channel);
+      } else {
+        killedPlant(user.name, args[1], channel);
+      }
       break;
 
     case 'help':
@@ -138,13 +142,13 @@ function removePlant(name, target, channel) {
   let plantNum = parseInt(target, 10);
 
   if (Number.isNaN(plantNum)) {
-    bot.send('Usage: \`plant delete [PLANT_NUMBER]\`');
+    bot.send('Usage: \`plant delete [PLANT_NUMBER]\`', channel);
     return;
   }
 
   client.smembers(name, (err, set) => {
     if (err || set.length < 1) {
-      bot.send(`You don\'t have any plants to remove, ${name}!`);
+      bot.send(`You don\'t have any plants to remove, ${name}!`, channel);
       return;
     }
 
@@ -154,7 +158,7 @@ function removePlant(name, target, channel) {
     }
 
     client.srem(name, set[plantNum - 1]);
-    bot.send('You removed a plant. I hope it has gone to a good home.', client);
+    bot.send('You removed a plant. I hope it has gone to a good home.', channel);
     showPlants(name, channel);
   });
 }
@@ -171,6 +175,31 @@ function showKilledPlants(name, channel) {
     set.forEach((plant, index) => {
       bot.send(`${index + 1}.${plant}`, channel);
     });
+  });
+}
+
+function killedPlant(name, target, channel) {
+  let plantNum = parseInt(target, 10);
+
+  if (Number.isNaN(plantNum)) {
+    bot.send('Usage: \`plant killed [PLANT_NUMBER]\`', channel);
+    return;
+  }
+
+  client.smembers(name, (err, set) => {
+    if (err || set.length < 1) {
+      bot.send(`You don\'t have any plants to kill, ${name}!`, channel);
+      return;
+    }
+
+    if (plantNum > set.length || plantNum <= 0) {
+      bot.send('Oops, that plant doesn\'t exist!', channel);
+      return;
+    }
+
+    client.srem(name, set[plantNum - 1]);
+    bot.send('You killed a plant. :scream: That\'s such a shame! It was my favourite.', channel);
+    showPlants(name, channel);
   });
 }
 
