@@ -1,7 +1,7 @@
 'use strict';
 
 const redis = require('redis');
-const Bot = require('./Bot');
+const Bot = require('./bot.js');
 
 const client = redis.createClient();
 
@@ -72,7 +72,18 @@ bot.respondTo('suggest', (message, channel, user) => {
 
   switch(args[0]) {
     case 'plant':
-      bot.send('Let me think about that and I\'ll get back to you.', channel);
+      client.smembers(`${user.name}:killed`, (err, set) => {
+        if (err) {
+          bot.send('Oops! I tried to check if you had killed any plants but something went wrong :(', channel);
+          return;
+        }
+
+        if (set.length > 1) {
+          bot.send(`You\'ve already killed ${set.length} plants. Is this wise going for another one?`, channel);
+        } else {
+          bot.send('Let me think about that and I\'ll get back to you.', channel);
+        }
+      });
       break;
 
     default:
