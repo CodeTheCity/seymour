@@ -380,3 +380,18 @@ function startProcessQueue() {
 
     var intervalID = setInterval(processQueue, 1);
 }
+
+function getChannels(allChannels) {
+     let channels = [];
+     // Loop over all channels
+     for (let id in allChannels) {
+       // Get an individual channel
+       let channel = allChannels[id];
+       // Is this user a member of the channel?
+       if (channel.is_member) {
+         // If so, push it to the array
+         channels.push(channel);
+       }
+}
+     return channels;
+   }
