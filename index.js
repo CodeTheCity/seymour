@@ -11,6 +11,10 @@ const bot = new Bot({
   autoMark: true
 });
 
+var noble = require('noble');
+var status = STATUS_STARTING;
+startProcessQueue();
+
 client.on('error', (err) => {
   console.log('Error ' + err);
 });
@@ -219,4 +223,142 @@ function killedPlant(name, target, channel) {
 
 function getArgs(msg) {
   return msg.split(' ').slice(1);
+}
+
+
+var standardServiceUUID = "03b80e5aede84b33a7516ce34ec4c700";
+var standardButtonCharacteristicUUID = "7772e5db38684112a1a9f2669d106bf3";
+
+var connectedDevices = [];
+
+noble.on('stateChange', function(state) {
+        console.log('state changed: ' + state);
+        if (state == 'poweredOn') {
+                startScan();
+        } else {
+                noble.stopScanning();
+        }
+});
+
+noble.on('scanStop', function() {
+        console.log('Scanning stopped');
+});
+
+noble.on('scanStart', function() {
+        console.log('Scanning started');
+});
+
+noble.on('discover', function(peripheral) {
+    if (peripheral.advertisement.localName == 'novppia1') {
+
+        peripheral.once('disconnect', function() {
+            console.log('disconnected from ' + peripheral.uuid);
+            var index = connectedDevices.indexOf(peripheral.uuid);
+            if(index > -1) {
+                connectedDevices.splice(index, 1);
+                startScan();
+            }
+        });
+
+        if(connectedDevices.indexOf(peripheral.uuid) == -1) {
+            connectedDevices.push(peripheral.uuid);
+            console.log('Found device with uuid: ' + peripheral.uuid);
+            console.log('Found device with local name: ' + peripheral.advertisement.localName);
+            console.log('advertising the following service uuid\'s: ' + peripheral.advertisement.serviceUuids);
+            console.log();
+
+            connect(peripheral);
+        }
+    }
+});
+
+function startScan() {
+    // only scan for devices advertising these service UUID's (default or empty array => any peripherals
+    var serviceUuids = [standardServiceUUID];
+
+    // allow duplicate peripheral to be returned (default false) on discovery event
+    var allowDuplicates = true;
+
+    noble.startScanning(serviceUuids, allowDuplicates);
+}
+
+function connect(peripheral) {
+    peripheral.connect(function(error) {
+        console.log('connected to peripheral: ' + peripheral.uuid);
+
+        peripheral.discoverServices([standardServiceUUID], function(error, services) {
+            console.log('discovered the following services:' + services);
+            for(var idxService = 0; idxService < services.length; idxService++){
+                console.log(' ' + idxService + ' service uuid: ' + services[idxService].uuid);
+
+                var service = services[idxService];
+                service.discoverCharacteristics([standardButtonCharacteristicUUID], function(error, characteristics) {
+                    console.log('Button characteristic discovered');
+                    /*
+                    console.log('discovered the following characteristics:');
+                    for (var i in characteristics) {
+                        console.log('  ' + i + ' uuid: ' + characteristics[i].uuid);
+                    }
+                    */
+
+                    var buttonCharacteristic = characteristics[0];
+                    buttonCharacteristic.subscribe(function(error) {
+                        if(error !== null) {
+                            //console.log('Error: ' + error);
+                        }
+                    });
+
+                    buttonCharacteristic.on('data', function(data, isNotification) {
+                        //console.log('data ' + data.toString('hex') + ' ' + buttonCharacteristic._peripheralId);
+                        var button = data.readUInt8(3);
+                        var velocity = data.readUInt8(4);
+                        var buttonIdentifier = buttonCharacteristic._peripheralId + ':' + button;
+                        console.log('button ' + buttonIdentifier + ' velocity ' + velocity);
+
+
+                        var message = new DeviceMessage(buttonCharacteristic._peripheralId, button, velocity);
+                        messageQueue.push(message);
+                    });
+
+                    buttonCharacteristic.notify(true, function(error) {
+                        console.log('value notification on');
+                    });
+                });
+            }
+        });
+    });
+}
+
+
+
+function startProcessQueue() {
+    status = STATUS_QUEUE_ACTIVE;
+    var processQueue = function() {
+
+        if(messageQueue.length > 0) {
+            //console.log('Queue size: ' + messageQueue.length);
+
+            var message = messageQueue.shift();
+            //console.log(message.getDevice() + ' - ' + message.getButton() + ' - ' + message.getVelocity());
+            var buttonIdentifier = message.getButtonIdentifier();
+            var velocity = message.getVelocity();
+
+            if (velocity > 0) {
+              let channels = getChannels(slack.dataStore.channels);
+              let channelNames = channels.map((channel) => {
+                return channel.name;
+              }).join(', ');
+
+              channels.forEach((channel) => {
+               slack.sendMessage(`Button ${buttonIdentifier} pressed!`, channel.id);
+             });
+
+            } else {
+
+            }
+
+        }
+    };
+
+    var intervalID = setInterval(processQueue, 1);
 }
