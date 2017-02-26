@@ -233,6 +233,7 @@ function getArgs(msg) {
 
 
 function messageToSlack(msg) {
+  let slack = bot.slack;
   let channels = getChannels(slack.dataStore.channels);
   let channelNames = channels.map((channel) => {
     return channel.name;
