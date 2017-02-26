@@ -11,6 +11,12 @@ const bot = new Bot({
   autoMark: true
 });
 
+var messageQueue = [];
+
+const STATUS_STARTING = 0;
+const STATUS_TEST_CYCLE = 1;
+const STATUS_QUEUE_ACTIVE = 2;
+
 var noble = require('noble');
 var status = STATUS_STARTING;
 startProcessQueue();
@@ -226,6 +232,17 @@ function getArgs(msg) {
 }
 
 
+function messageToSlack(msg) {
+  let channels = getChannels(slack.dataStore.channels);
+  let channelNames = channels.map((channel) => {
+    return channel.name;
+  }).join(', ');
+
+  channels.forEach((channel) => {
+   slack.sendMessage(msg, channel.id);
+ });
+}
+
 var standardServiceUUID = "03b80e5aede84b33a7516ce34ec4c700";
 var standardButtonCharacteristicUUID = "7772e5db38684112a1a9f2669d106bf3";
 
@@ -262,12 +279,13 @@ noble.on('discover', function(peripheral) {
 
         if(connectedDevices.indexOf(peripheral.uuid) == -1) {
             connectedDevices.push(peripheral.uuid);
+            messageToSlack(`Found device with uuid:${peripheral.uuid}`);
             console.log('Found device with uuid: ' + peripheral.uuid);
             console.log('Found device with local name: ' + peripheral.advertisement.localName);
             console.log('advertising the following service uuid\'s: ' + peripheral.advertisement.serviceUuids);
             console.log();
 
-            connect(peripheral);
+            //connect(peripheral);
         }
     }
 });
